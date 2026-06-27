@@ -202,6 +202,90 @@ curl -X GET "http://localhost:8787/api/mail?page=1&limit=20&folder=inbox" \
 | `MAIL_DOMAIN` | 邮件域名 | 是 |
 | `MAIL_DOMAIN` | 邮件域名 | 是 |
 
+## 部署方式
+
+### 方式一：通过 GitHub Actions 自动部署（推荐）
+
+1. **Fork 本仓库到你的 GitHub 账户**
+
+2. **创建 Cloudflare API Token**
+
+   前往 [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)，创建一个 Token，权限如下：
+   - Account → D1 → Edit
+   - Account → Workers R2 Storage → Edit
+   - Account → Workers KV Storage → Edit
+   - Account → Workers Scripts → Edit
+   - Zone → Workers Routes → Edit
+
+3. **在 GitHub 仓库中配置 Secrets**
+
+   进入仓库 Settings → Secrets and variables → Actions，添加以下 Secrets：
+
+   | Secret 名称 | 描述 |
+   |-------------|------|
+   | `CF_API_TOKEN` | Cloudflare API Token |
+   | `CF_ACCOUNT_ID` | Cloudflare 账户 ID（在 Dashboard 右下角可找到） |
+   | `RESEND_API_KEY` | Resend API 密钥 |
+   | `TURNSTILE_SECRET_KEY` | Turnstile 密钥 |
+   | `JWT_SECRET` | JWT 签名密钥（至少 32 位随机字符串） |
+
+4. **在 GitHub 仓库中配置 Variables**
+
+   进入仓库 Settings → Secrets and variables → Actions → Variables，添加：
+
+   | Variable 名称 | 描述 |
+   |---------------|------|
+   | `MAIL_DOMAIN` | 你的邮件域名，如 `yourdomain.com` |
+   | `TURNSTILE_SITE_KEY` | Turnstile Site Key |
+
+5. **修改 wrangler.toml 中的资源 ID**
+
+   在 `wrangler.toml` 中填入你自己的：
+   - D1 数据库 ID
+   - R2 Bucket 名称
+   - KV Namespace ID
+
+6. **推送代码到 main 分支**
+
+   推送到 `main` 分支后，GitHub Actions 会自动触发部署。你也可以在 Actions 页面手动触发。
+
+### 方式二：手动部署
+
+```bash
+# 登录 Cloudflare
+npx wrangler login
+
+# 创建 D1 数据库
+npx wrangler d1 create mailbox-db
+
+# 创建 KV Namespace
+npx wrangler kv:namespace create CACHE
+
+# 创建 R2 Bucket
+npx wrangler r2 bucket create mailbox-attachments
+
+# 设置 Secrets
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put TURNSTILE_SECRET_KEY
+npx wrangler secret put JWT_SECRET
+
+# 执行数据库迁移
+npm run db:migrate:remote
+
+# 部署
+npm run deploy
+```
+
+### 方式三：Cloudflare Workers Git 集成
+
+1. 前往 [Cloudflare Dashboard → Workers](https://dash.cloudflare.com/?to=/:account/workers)
+2. 点击 "Create application" → "Create Worker"
+3. 在 Worker 设置中找到 "Git integration"
+4. 连接你的 GitHub 仓库
+5. 配置构建命令和输出目录：
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+
 ## 邮件接收配置
 
 1. 在 Cloudflare Dashboard 启用 Email Routing

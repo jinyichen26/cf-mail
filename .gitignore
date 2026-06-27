@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+worker/
+.output/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.dev.vars
+.dev.vars.*
+
+# Wrangler
+.wrangler/
+.wrangler.toml.state
+.turbo/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
+*.tsbuildinfo
+coverage/
+.tmp/
+.cache/
