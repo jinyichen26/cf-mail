@@ -1,6 +1,11 @@
 name = "cloudflare-mailbox-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Build configuration for Git integration
+build_command = "npx wrangler types && npx esbuild src/index.ts --bundle --outfile=dist/worker.js --platform=worker --format=esm --external:D1_BASE_API --external:node:buffer --external:node:crypto"
+find_additional_modules = false
 
 # D1 Database binding
 [[d1_databases]]
