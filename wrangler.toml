@@ -2,9 +2,6 @@ name = "cloudflare-mailbox-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
-[site]
-bucket = "./public"
-
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
@@ -21,14 +18,18 @@ bucket_name = "mailbox-attachments"
 binding = "CACHE"
 id = "your-kv-namespace-id"
 
-# Environment variables (set in Cloudflare dashboard)
+# Environment variables
 [vars]
 MAIL_DOMAIN = "yourdomain.com"
 TURNSTILE_SITE_KEY = "your-turnstile-site-key"
 
-# Secrets (set via wrangler secret put)
+# Secrets - set via wrangler secret put or GitHub Secrets
 # RESEND_API_KEY
 # TURNSTILE_SECRET_KEY
 # JWT_SECRET
-# DATABASE_NAME
-# DATABASE_ID
+
+[env.production]
+name = "cloudflare-mailbox-api"
+
+[env.staging]
+name = "cloudflare-mailbox-api-staging"
