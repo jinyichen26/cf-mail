@@ -1,0 +1,34 @@
+name = "cloudflare-mailbox-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./public"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "mailbox-db"
+database_id = "your-database-id"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "mailbox-attachments"
+
+# KV namespace binding
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-namespace-id"
+
+# Environment variables (set in Cloudflare dashboard)
+[vars]
+MAIL_DOMAIN = "yourdomain.com"
+TURNSTILE_SITE_KEY = "your-turnstile-site-key"
+
+# Secrets (set via wrangler secret put)
+# RESEND_API_KEY
+# TURNSTILE_SECRET_KEY
+# JWT_SECRET
+# DATABASE_NAME
+# DATABASE_ID
