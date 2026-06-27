@@ -1,6 +1,7 @@
 import { Context, MiddlewareHandler } from 'hono';
 import type { Env } from '../types';
 import { ForbiddenError } from './error';
+import { getTurnstileSecret } from '../services/settings';
 
 export const turnstileVerify: MiddlewareHandler<{ Bindings: Env }> = async (c: Context) => {
   const token = c.req.header('X-Turnstile-Token');
@@ -9,7 +10,12 @@ export const turnstileVerify: MiddlewareHandler<{ Bindings: Env }> = async (c: C
     throw new ForbiddenError('Turnstile token is required');
   }
 
-  const secretKey = c.env.TURNSTILE_SECRET_KEY;
+  // Get Turnstile secret key from settings (database)
+  const secretKey = await getTurnstileSecret(c.env.DB);
+
+  if (!secretKey) {
+    throw new ForbiddenError('Turnstile is not configured. Please set the secret key in settings.');
+  }
 
   try {
     const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {

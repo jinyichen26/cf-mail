@@ -11,6 +11,7 @@ import { mailRoutes } from './routes/mail';
 import { labelRoutes } from './routes/label';
 import { folderRoutes } from './routes/folder';
 import { attachmentRoutes } from './routes/attachment';
+import { settingsRoutes } from './routes/settings';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -35,6 +36,7 @@ app.route('/api/mail', mailRoutes);
 app.route('/api/labels', labelRoutes);
 app.route('/api/folders', folderRoutes);
 app.route('/api/attachments', attachmentRoutes);
+app.route('/api/settings', settingsRoutes);
 
 // Email routing webhook endpoint
 app.post('/email/routing', async (c) => {

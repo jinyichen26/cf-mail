@@ -5,6 +5,7 @@ import type { ApiResponse, EmailFilters, PaginationParams } from '../types';
 import { authenticate } from '../middleware/auth';
 import { turnstileVerify } from '../middleware/turnstile';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../middleware/error';
+import { getResendApiKey } from '../services/settings';
 
 export const mailRoutes = new Hono<{ Bindings: Env }>();
 
@@ -206,7 +207,13 @@ mailRoutes.post('/send', authenticate, turnstileVerify, async (c) => {
     fromEmail = (defaultMailbox as { email: string }).email;
   }
 
-  const resend = new Resend(c.env.RESEND_API_KEY);
+  // Get Resend API Key from settings (database)
+  const resendApiKey = await getResendApiKey(c.env.DB, userPayload?.sub);
+  if (!resendApiKey) {
+    throw new BadRequestError('Resend API key not configured. Please set it in settings.');
+  }
+
+  const resend = new Resend(resendApiKey);
 
   // Get attachments if specified
   let attachments: Array<{ filename: string; content: ArrayBuffer | Blob }> = [];
