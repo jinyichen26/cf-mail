@@ -3,15 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Build configuration for Git integration
-build_command = "npx wrangler types && npx esbuild src/index.ts --bundle --outfile=dist/worker.js --platform=worker --format=esm --external:D1_BASE_API --external:node:buffer --external:node:crypto"
-find_additional_modules = false
-
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
 database_name = "mailbox-db"
-database_id = "your-database-id"
+database_id = "YOUR_DATABASE_ID"
 
 # R2 bucket binding
 [[r2_buckets]]
@@ -21,20 +17,14 @@ bucket_name = "mailbox-attachments"
 # KV namespace binding
 [[kv_namespaces]]
 binding = "CACHE"
-id = "your-kv-namespace-id"
+id = "YOUR_KV_NAMESPACE_ID"
 
 # Environment variables
 [vars]
 MAIL_DOMAIN = "yourdomain.com"
 TURNSTILE_SITE_KEY = "your-turnstile-site-key"
 
-# Secrets - set via wrangler secret put or GitHub Secrets
+# Secrets (set in Cloudflare Dashboard → Workers & Pages → your Worker → Settings → Variables)
 # RESEND_API_KEY
 # TURNSTILE_SECRET_KEY
 # JWT_SECRET
-
-[env.production]
-name = "cloudflare-mailbox-api"
-
-[env.staging]
-name = "cloudflare-mailbox-api-staging"
