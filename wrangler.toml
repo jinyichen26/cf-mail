@@ -19,12 +19,12 @@ bucket_name = "mailbox-attachments"
 binding = "CACHE"
 id = "YOUR_KV_NAMESPACE_ID"
 
-# Environment variables
+# Environment variables (non-sensitive)
 [vars]
 MAIL_DOMAIN = "yourdomain.com"
 TURNSTILE_SITE_KEY = "your-turnstile-site-key"
 
-# Secrets (set in Cloudflare Dashboard → Workers & Pages → your Worker → Settings → Variables)
+# Secrets (set via: wrangler secret put <NAME>)
 # RESEND_API_KEY
 # TURNSTILE_SECRET_KEY
 # JWT_SECRET

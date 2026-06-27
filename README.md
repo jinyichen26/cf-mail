@@ -23,44 +23,53 @@
 npm install
 ```
 
-### 2. 配置 Cloudflare
+### 2. 登录 Cloudflare
 
-确保你的 Cloudflare 账户已启用以下服务：
-
-- Workers
-- D1 Database
-- R2 Storage
-- KV Namespace
-- Turnstile
+```bash
+npx wrangler login
+```
 
 ### 3. 创建 D1 数据库
 
 ```bash
-wrangler d1 create mailbox-db
+npx wrangler d1 create mailbox-db
 ```
 
 将返回的 `database_id` 填入 `wrangler.toml`。
 
-### 4. 配置环境变量
-
-创建 `.dev.vars` 文件：
-
-```env
-RESEND_API_KEY=your_resend_api_key
-TURNSTILE_SECRET_KEY=your_turnstile_secret_key
-JWT_SECRET=your_secure_jwt_secret_min_32_chars
-MAIL_DOMAIN=yourdomain.com
-```
-
-### 5. 设置 KV Namespace
+### 4. 创建 R2 Bucket
 
 ```bash
-wrangler kv:namespace create CACHE
+npx wrangler r2 bucket create mailbox-attachments
+```
+
+### 5. 创建 KV Namespace
+
+```bash
+npx wrangler kv:namespace create CACHE
 ```
 
 将返回的 `id` 填入 `wrangler.toml`。
 
-### 6. 本地开发
+### 6. 设置 Secrets
+
+```bash
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put TURNSTILE_SECRET_KEY
+npx wrangler secret put JWT_SECRET
+```
+
+### 7. 修改环境变量
+
+编辑 `wrangler.toml` 中的 `[vars]` 部分：
+
+```toml
+[vars]
+MAIL_DOMAIN = "yourdomain.com"
+TURNSTILE_SITE_KEY = "your-turnstile-site-key"
+```
+
+### 8. 本地开发
 
 ```bash
 npm run dev
@@ -68,13 +77,17 @@ npm run dev
 
 API 将在 `http://localhost:8787` 运行。
 
-### 7. 数据库迁移
+### 9. 数据库迁移
 
 ```bash
+# 本地数据库
 npm run db:migrate
+
+# 远程数据库
+npm run db:migrate:remote
 ```
 
-### 8. 部署
+### 10. 部署
 
 ```bash
 npm run deploy
@@ -144,6 +157,16 @@ npm run deploy
 | GET | /api/attachments/:id | 下载附件 |
 | DELETE | /api/attachments/:id | 删除附件 |
 
+### 设置
+
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | /api/settings | 获取公开设置 |
+| GET | /api/settings/all | 获取所有设置（敏感字段打码） |
+| PUT | /api/settings/:key | 更新设置 |
+| DELETE | /api/settings/:key | 删除设置 |
+| GET | /api/settings/:key/exists | 检查设置是否存在 |
+
 ## API 请求示例
 
 ### 注册
@@ -194,103 +217,36 @@ curl -X GET "http://localhost:8787/api/mail?page=1&limit=20&folder=inbox" \
 
 ## 环境变量说明
 
-| 变量 | 描述 | 必需 |
-|------|------|------|
-| `RESEND_API_KEY` | Resend API 密钥，用于发送邮件 | 是 |
-| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 密钥 | 是 |
-| `JWT_SECRET` | JWT 签名密钥（至少 32 字符） | 是 |
-| `MAIL_DOMAIN` | 邮件域名 | 是 |
-| `MAIL_DOMAIN` | 邮件域名 | 是 |
-
-## 部署方式
-
-### 方式一：通过 GitHub Actions 自动部署（推荐）
-
-1. **Fork 本仓库到你的 GitHub 账户**
-
-2. **创建 Cloudflare API Token**
-
-   前往 [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)，创建一个 Token，权限如下：
-   - Account → D1 → Edit
-   - Account → Workers R2 Storage → Edit
-   - Account → Workers KV Storage → Edit
-   - Account → Workers Scripts → Edit
-   - Zone → Workers Routes → Edit
-
-3. **在 GitHub 仓库中配置 Secrets**
-
-   进入仓库 Settings → Secrets and variables → Actions，添加以下 Secrets：
-
-   | Secret 名称 | 描述 |
-   |-------------|------|
-   | `CF_API_TOKEN` | Cloudflare API Token |
-   | `CF_ACCOUNT_ID` | Cloudflare 账户 ID（在 Dashboard 右下角可找到） |
-   | `RESEND_API_KEY` | Resend API 密钥 |
-   | `TURNSTILE_SECRET_KEY` | Turnstile 密钥 |
-   | `JWT_SECRET` | JWT 签名密钥（至少 32 位随机字符串） |
-
-4. **在 GitHub 仓库中配置 Variables**
-
-   进入仓库 Settings → Secrets and variables → Actions → Variables，添加：
-
-   | Variable 名称 | 描述 |
-   |---------------|------|
-   | `MAIL_DOMAIN` | 你的邮件域名，如 `yourdomain.com` |
-   | `TURNSTILE_SITE_KEY` | Turnstile Site Key |
-
-5. **修改 wrangler.toml 中的资源 ID**
-
-   在 `wrangler.toml` 中填入你自己的：
-   - D1 数据库 ID
-   - R2 Bucket 名称
-   - KV Namespace ID
-
-6. **推送代码到 main 分支**
-
-   推送到 `main` 分支后，GitHub Actions 会自动触发部署。你也可以在 Actions 页面手动触发。
-
-### 方式二：手动部署
-
-```bash
-# 登录 Cloudflare
-npx wrangler login
-
-# 创建 D1 数据库
-npx wrangler d1 create mailbox-db
-
-# 创建 KV Namespace
-npx wrangler kv:namespace create CACHE
-
-# 创建 R2 Bucket
-npx wrangler r2 bucket create mailbox-attachments
-
-# 设置 Secrets
-npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put TURNSTILE_SECRET_KEY
-npx wrangler secret put JWT_SECRET
-
-# 执行数据库迁移
-npm run db:migrate:remote
-
-# 部署
-npm run deploy
-```
-
-### 方式三：Cloudflare Workers Git 集成
-
-1. 前往 [Cloudflare Dashboard → Workers](https://dash.cloudflare.com/?to=/:account/workers)
-2. 点击 "Create application" → "Create Worker"
-3. 在 Worker 设置中找到 "Git integration"
-4. 连接你的 GitHub 仓库
-5. 配置构建命令和输出目录：
-   - Build command: `npm run build`
-   - Build output directory: `dist`
+| 变量 | 类型 | 描述 | 必需 |
+|------|------|------|------|
+| `RESEND_API_KEY` | Secret | Resend API 密钥 | 是 |
+| `TURNSTILE_SECRET_KEY` | Secret | Turnstile 密钥 | 是 |
+| `JWT_SECRET` | Secret | JWT 签名密钥（至少 32 字符） | 是 |
+| `MAIL_DOMAIN` | Vars | 邮件域名 | 是 |
+| `TURNSTILE_SITE_KEY` | Vars | Turnstile Site Key | 是 |
 
 ## 邮件接收配置
 
 1. 在 Cloudflare Dashboard 启用 Email Routing
-2. 创建邮件路由规则，将邮件转发到 `/email/routing` 端点
+2. 创建邮件路由规则，将邮件转发到 Worker 的 `/email/routing` 端点
 3. 配置你的 DNS MX 记录指向 Cloudflare
+
+## 项目结构
+
+```
+.
+├── migrations/           # 数据库迁移脚本
+├── src/
+│   ├── index.ts          # 主入口
+│   ├── types.ts          # TypeScript 类型
+│   ├── db/              # 数据库
+│   ├── middleware/      # 中间件
+│   ├── routes/          # API 路由
+│   ├── services/        # 业务逻辑
+│   └── utils/           # 工具函数
+├── wrangler.toml        # Cloudflare 配置
+└── package.json
+```
 
 ## License
 
